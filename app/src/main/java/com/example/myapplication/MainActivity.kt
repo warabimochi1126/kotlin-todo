@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -83,27 +85,31 @@ fun MyTodoApp() {
         //Columnは中身のComposableを上から順番に並べてくれるComposableです
         Column (modifier = Modifier
                     .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(16.dp)         //上と横に16dpの幅を設定する
         ){
             // 文字サイズはModifierを使って設置出来ません.どんな部品でも共通の設定ならModifier,部品特有の設定なら引数で設定すると考えておくと良いです
-            TextField(
-                // 保存された値をtodo.valueの値をフォームに代入している(見えるようにしている)
-                value = todo.value,
+            // 追加ボタンをフォームの横に配置します.Rowの中に置かれたComposableは左から順に配置されます.verticalAlignmentに渡した値によって各要素の揃え方が変わります
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextField(
+                    // 保存された値をtodo.valueの値をフォームに代入している(見えるようにしている)
+                    value = todo.value,
 
-                // フォームに入力された内容をtodo.valueに保存しています.入力内容がtextに入ってtodo.value=textで入力内容がtodo.valueに代入されます
-                // onValueChangeに渡した処理が1文字ごとに実行されています
-                onValueChange = {text -> todo.value = text},
-                // JetpackComposeで見た目を整えるにはModifierを使います.作成したComposableをModify(修正)するのがModifierという意味です
-                modifier = Modifier.padding(bottom = 16.dp)           //上下に余白を付ける
-            )
+                    // フォームに入力された内容をtodo.valueに保存しています.入力内容がtextに入ってtodo.value=textで入力内容がtodo.valueに代入されます
+                    // onValueChangeに渡した処理が1文字ごとに実行されています
+                    onValueChange = {text -> todo.value = text},
+                    // JetpackComposeで見た目を整えるにはModifierを使います.作成したComposableをModify(修正)するのがModifierという意味です
+                    modifier = Modifier.padding(end = 16.dp)           //上下に余白を付ける
+                )
 
-            //todoList.add()で追加ボタンを押した時にフォームに入力されていたデータがtodoListに保存されます
-            Button(onClick = {
-                todoList.add(todo.value)
-                todo.value = ""
-            }) {
-                Text(text = "追加")
+                //todoList.add()で追加ボタンを押した時にフォームに入力されていたデータがtodoListに保存されます
+                Button(onClick = {
+                    todoList.add(todo.value)
+                    todo.value = ""
+                }) {
+                    Text(text = "追加")
+                }
             }
+
             //追加したtodoの内容を保存しています
             todoList.forEach{ item ->
                 Text(text = item)
