@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,31 +66,48 @@ fun MyTodoApp() {
     //todoの一覧は複数のテキストを扱うので状態を配列で持ちます.mutableStateListOf()は配列で状態を作成します.<String>で配列の型は文字列を指定しています
     val todoList = remember { mutableStateListOf<String>() }
 
-    //Columnは中身のComposableを上から順番に並べてくれるComposableです
-    Column {
-        // 文字サイズはModifierを使って設置出来ません.どんな部品でも共通の設定ならModifier,部品特有の設置なら引数で設定すると考えておくと良いです
-        Text(text = "My TODO", fontSize = 32.sp)
-        TextField(
-            // 保存された値をtodo.valueの値をフォームに代入している(見えるようにしている)
-            value = todo.value,
-
-            // フォームに入力された内容をtodo.valueに保存しています.入力内容がtextに入ってtodo.value=textで入力内容がtodo.valueに代入されます
-            // onValueChangeに渡した処理が1文字ごとに実行されています
-            onValueChange = {text -> todo.value = text},
-            // JetpackComposeで見た目を整えるにはModifierを使います.作成したComposableをModify(修正)するのがModifierという意味です
-            modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)           //上下に余白を付ける
-        )
-
-        //todoList.add()で追加ボタンを押した時にフォームに入力されていたデータがtodoListに保存されます
-        Button(onClick = {
-            todoList.add(todo.value)
-            todo.value = ""
-        }) {
-            Text(text = "追加")
+    // タイトルをトップバーの中にいれて表示します.Scaffoldは画面全体のUIを組むために使います
+    Scaffold(
+        //トップバーの引数
+        topBar = {
+            TopAppBar(
+                title = { Text(
+                    text = "My TODO",
+                    color = Color.White,
+                )},
+                // TopAppBarの引数にcolorsがあるので色を引き渡すと背景色を変更出来ます
+                colors = TopAppBarDefaults.smallTopAppBarColors(Color(0xFF000800))
+            )
         }
-        //追加したtodoの内容を保存しています
-        todoList.forEach{ item ->
-            Text(text = item)
+    ) {paddingValues ->
+        //Columnは中身のComposableを上から順番に並べてくれるComposableです
+        Column (modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(16.dp)
+        ){
+            // 文字サイズはModifierを使って設置出来ません.どんな部品でも共通の設定ならModifier,部品特有の設定なら引数で設定すると考えておくと良いです
+            TextField(
+                // 保存された値をtodo.valueの値をフォームに代入している(見えるようにしている)
+                value = todo.value,
+
+                // フォームに入力された内容をtodo.valueに保存しています.入力内容がtextに入ってtodo.value=textで入力内容がtodo.valueに代入されます
+                // onValueChangeに渡した処理が1文字ごとに実行されています
+                onValueChange = {text -> todo.value = text},
+                // JetpackComposeで見た目を整えるにはModifierを使います.作成したComposableをModify(修正)するのがModifierという意味です
+                modifier = Modifier.padding(bottom = 16.dp)           //上下に余白を付ける
+            )
+
+            //todoList.add()で追加ボタンを押した時にフォームに入力されていたデータがtodoListに保存されます
+            Button(onClick = {
+                todoList.add(todo.value)
+                todo.value = ""
+            }) {
+                Text(text = "追加")
+            }
+            //追加したtodoの内容を保存しています
+            todoList.forEach{ item ->
+                Text(text = item)
+            }
         }
     }
 }
