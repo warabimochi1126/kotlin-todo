@@ -8,8 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -19,9 +24,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -58,7 +65,6 @@ class MainActivity : ComponentActivity() {
 // 追加したTextFieldという部品が試験的な物で今後変更される可能性があるという事を示すアノテーションです(付けてないとビルド出来ないです)
 @OptIn(ExperimentalMaterial3Api::class)
 // @Composableというアノテーションを追加
-// 関数を宣言して大文字で始める
 @Composable
 /* ①UI用の関数を作成する */
 fun MyTodoApp() {
@@ -68,6 +74,15 @@ fun MyTodoApp() {
     //todoの一覧は複数のテキストを扱うので状態を配列で持ちます.mutableStateListOf()は配列で状態を作成します.<String>で配列の型は文字列を指定しています
     val todoList = remember { mutableStateListOf<String>() }
 
+    MyTodoAppContent(todo = todo, todoList = todoList)
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyTodoAppContent(
+    todo: MutableState<String>,
+
+    todoList: SnapshotStateList<String>
+) {
     // タイトルをトップバーの中にいれて表示します.Scaffoldは画面全体のUIを組むために使います
     Scaffold(
         //トップバーの引数
@@ -84,12 +99,14 @@ fun MyTodoApp() {
     ) {paddingValues ->
         //Columnは中身のComposableを上から順番に並べてくれるComposableです
         Column (modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(16.dp)         //上と横に16dpの幅を設定する
+            .padding(paddingValues)
+            .padding(16.dp)         //上と横に16dpの幅を設定する
         ){
             // 文字サイズはModifierを使って設置出来ません.どんな部品でも共通の設定ならModifier,部品特有の設定なら引数で設定すると考えておくと良いです
             // 追加ボタンをフォームの横に配置します.Rowの中に置かれたComposableは左から順に配置されます.verticalAlignmentに渡した値によって各要素の揃え方が変わります
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)     //下に16dp幅をつけているのでtodo表示が詰められない
+            ) {
                 TextField(
                     // 保存された値をtodo.valueの値をフォームに代入している(見えるようにしている)
                     value = todo.value,
@@ -97,8 +114,12 @@ fun MyTodoApp() {
                     // フォームに入力された内容をtodo.valueに保存しています.入力内容がtextに入ってtodo.value=textで入力内容がtodo.valueに代入されます
                     // onValueChangeに渡した処理が1文字ごとに実行されています
                     onValueChange = {text -> todo.value = text},
+
                     // JetpackComposeで見た目を整えるにはModifierを使います.作成したComposableをModify(修正)するのがModifierという意味です
-                    modifier = Modifier.padding(end = 16.dp)           //上下に余白を付ける
+                    // Androidでは左にstart.右にendを使います.これは一つの設定でアラビア語のような右から左に読むような言語に対して良いUIを保持させるためです
+                    modifier = Modifier
+                        .padding(end = 16.dp)   // 入力フォームに対して右に16dp幅を設定しています
+                        .weight(1f)             // weightはRowScopeの中で使えるmodifierです.RowScopeに配置された要素の横幅比を設定出来ます
                 )
 
                 //todoList.add()で追加ボタンを押した時にフォームに入力されていたデータがtodoListに保存されます
@@ -110,10 +131,28 @@ fun MyTodoApp() {
                 }
             }
 
-            //追加したtodoの内容を保存しています
-            todoList.forEach{ item ->
-                Text(text = item)
+            //追加したtodoの内容を表示しています
+            todoList.forEachIndexed { index, item ->
+                TodoItem(
+                    text = item,
+                    deleteTodo = { todoList.removeAt(index) }
+                )
             }
+        }
+    }
+}
+@Composable
+//() -> Unit は関数型を表しています.()の中にはその関数に必要な引数の型を,->の後には返り値の型を定義します.この場合引数無し.返り値無しの関数を示しています
+fun TodoItem(text: String, deleteTodo: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text = text,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .weight(1f)                 //weight()を使って横幅一杯にTextのComposableを伸ばす事で削除ボタンを右端に固定しています
+        )
+        //IconButton()はアイコンをボタンとして表示するためのComposableです
+        IconButton(onClick = { deleteTodo() }) {
+            Icon(imageVector = Icons.Default.Delete, contentDescription = "削除ボタン")
         }
     }
 }
@@ -125,6 +164,9 @@ fun MyTodoApp() {
 fun GreetingPreview() {
     MyApplicationTheme {
         /* ③AndoridStudio側からプレビュー出来るようにUI用の関数を渡す */
-        MyTodoApp()
+        MyTodoAppContent(
+            todo = remember { mutableStateOf("文字を入力中...") },
+            todoList = remember { mutableStateListOf("長い長い長い長い長い長い長い長い長い長い長い長い長い TODO", "TODO 2") }
+        )
     }
 }
